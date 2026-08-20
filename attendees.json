@@ -3,17 +3,17 @@
     {
       "id": "A001",
       "name": "John Kamau",
-      "checkedIn": true
+      "checkedIn": false
     },
     {
       "id": "A002",
       "name": "Mary Wanjiku",
-      "checkedIn": true
+      "checkedIn": false
     },
     {
       "id": "A003",
       "name": "David Otieno",
-      "checkedIn": true
+      "checkedIn": false
     }
   ]
 }
