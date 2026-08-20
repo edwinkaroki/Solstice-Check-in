@@ -10,7 +10,7 @@
 
   <input id="attendeeId" placeholder="Enter attendee ID">
 
-  <button onclick="checkIn()">Check In</button>
+  <button id="checkInButton" onclick="checkIn()">Check In</button>
 
   <p id="result"></p>
 
@@ -18,21 +18,26 @@
     async function checkIn() {
       const attendeeId =
         document.getElementById("attendeeId").value;
+      const button = document.getElementById("checkInButton");
+      button.disabled = true;
 
-      const response = await fetch("/check-in", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          attendeeId: attendeeId
-        })
-      });
+      try {
+        const response = await fetch("/check-in", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            attendeeId: attendeeId
+          })
+        });
 
-      const data = await response.json();
+        const data = await response.json();
 
-      document.getElementById("result").textContent =
-        data.message;
+        document.getElementById("result").textContent = data.message;
+      } finally {
+        button.disabled = false;
+      }
     }
   </script>
 
