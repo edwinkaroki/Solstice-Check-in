@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Solstice Check-in</title>
+</head>
+
+<body>
+
+  <h1>Solstice Events Check-in</h1>
+
+  <input id="attendeeId" placeholder="Enter attendee ID">
+
+  <button onclick="checkIn()">Check In</button>
+
+  <p id="result"></p>
+
+  <script>
+    async function checkIn() {
+      const attendeeId =
+        document.getElementById("attendeeId").value;
+
+      const response = await fetch("/check-in", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          attendeeId: attendeeId
+        })
+      });
+
+      const data = await response.json();
+
+      document.getElementById("result").textContent =
+        data.message;
+    }
+  </script>
+
+</body>
+</html>
