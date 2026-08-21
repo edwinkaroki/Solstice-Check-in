@@ -14,31 +14,91 @@
 
   <p id="result"></p>
 
-  <script>
-    async function checkIn() {
-      const attendeeId =
-        document.getElementById("attendeeId").value;
-      const button = document.getElementById("checkInButton");
-      button.disabled = true;
+    <script>
+  async function checkIn() {
+    const attendeeId =
+      document.getElementById("attendeeId").value;
 
-      try {
-        const response = await fetch("/check-in", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            attendeeId: attendeeId
-          })
-        });
+    const button = document.getElementById("checkInButton");
+    const result = document.getElementById("result");
 
-        const data = await response.json();
+    button.disabled = true;
 
-        document.getElementById("result").textContent = data.message;
-      } finally {
+    try {
+      const response = await fetch("/check-in", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          attendeeId: attendeeId
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        result.textContent = data.message;
         button.disabled = false;
+        return;
       }
+
+      // Job has been placed in the queue
+      result.textContent = "Printer job queued...";
+
+      // Start checking the job status
+      checkJobStatus(data.jobId);
+
+    } catch (error) {
+      result.textContent = "Check-in failed.";
+      button.disabled = false;
     }
+  }
+
+  async function checkJobStatus(jobId) {
+    const result = document.getElementById("result");
+
+    try {
+      const response = await fetch(
+        `/check-in/status/${jobId}`
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        result.textContent = "Could not get print status.";
+        document.getElementById("checkInButton").disabled = false;
+        return;
+      }
+
+      const status = data.job.status;
+
+      if (status === "queued") {
+        result.textContent = "Printer job queued...";
+        setTimeout(() => checkJobStatus(jobId), 1000);
+
+      } else if (status === "printing") {
+        result.textContent = "Printing badge...";
+        setTimeout(() => checkJobStatus(jobId), 1000);
+
+      } else if (status === "printed") {
+        result.textContent = "✅ Badge printed successfully. Checked in!";
+        document.getElementById("checkInButton").disabled = false;
+
+      } else if (status === "failed") {
+        result.textContent = "❌ Badge printing failed.";
+        document.getElementById("checkInButton").disabled = false;
+
+      } else {
+        result.textContent = `Print status: ${status}`;
+        setTimeout(() => checkJobStatus(jobId), 1000);
+      }
+
+    } catch (error) {
+      result.textContent = "Unable to check print status.";
+      document.getElementById("checkInButton").disabled = false;
+    }
+  }
   </script>
 
 </body>

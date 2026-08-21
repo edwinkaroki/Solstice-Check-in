@@ -3,7 +3,7 @@
 ## Client Pivot
 
 The client introduced a non-negotiable architectural pivot with a
-48-hour deadline. The original polling-based approach was to be
+48-hour deadline. The original approach was to be
 removed or deprecated, with no extension to the deadline and no
 option to revert to the previous scope.
 
@@ -33,18 +33,20 @@ status based on the printer response.
 
 ## Implementation Changes
 
-### Removed/Deprecated
+### Deprecated
 
 The previous synchronous printer workflow was deprecated rather than
 silently removed. It is retained as a reference to the original
 implementation and is clearly marked as deprecated in the code.
 
 ### New Components
-
+ RabbitMQ for message queuing.
 - `queue.js` — handles RabbitMQ connection and publishing.
 - `worker.js` — consumes print jobs and communicates with the printer.
 - `jobStore.js` — tracks print-job status.
 - `print_jobs.json` — stores print-job state.
+
+The existing REST printer integration was retained, but it was moved from the main check-in request into the worker.
 
 ### Modified Components
 
@@ -81,6 +83,22 @@ The revised implementation prevents duplicate badge printing.
 An attendee who is already checked in is rejected. An attendee whose
 badge is currently being processed is also prevented from creating
 another print job.
+
+ ## Behavioural Changes
+
+Previously, the check-in request waited for the printer to
+complete.
+
+After the pivot, the check-in request returns a queued response
+while the worker processes the printing separately.
+
+An attendee is only marked as checked in after the worker
+receives a successful response from the printer.
+
+If printing fails, the attendee remains unchecked in and the
+print job is marked as failed.
+
+Duplicate scans are still rejected.
 
 ## Testing
 
