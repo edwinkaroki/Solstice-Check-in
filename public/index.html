@@ -1,105 +1,705 @@
 <!DOCTYPE html>
-<html>
-<head>
-  <title>Solstice Check-in</title>
-</head>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Solstice Check-in</title>
+    <style>
+      :root {
+        --bg-1: #0b1020;
+        --bg-2: #141b2f;
+        --card: rgba(17, 24, 39, 0.8);
+        --card-border: rgba(255, 255, 255, 0.1);
+        --text: #edf6ff;
+        --muted: #a7b3c9;
+        --accent: #7c9cff;
+        --accent-strong: #8ef0d6;
+        --accent-warm: #ffb980;
+        --success: #7cf0c3;
+        --error: #ff8ea6;
+        --shadow: rgba(7, 10, 18, 0.45);
+      }
 
-<body>
+      * {
+        box-sizing: border-box;
+      }
 
-  <h1>Solstice Events Check-in</h1>
+      html, body {
+        height: 100%;
+        margin: 0;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background:
+          radial-gradient(circle at top left, rgba(124, 156, 255, 0.28), transparent 28%),
+          radial-gradient(circle at bottom right, rgba(142, 240, 214, 0.16), transparent 32%),
+          linear-gradient(135deg, var(--bg-1), var(--bg-2));
+        color: var(--text);
+      }
 
-  <input id="attendeeId" placeholder="Enter attendee ID">
+      body {
+        display: grid;
+        place-items: center;
+        padding: 24px;
+      }
 
-  <button id="checkInButton" onclick="checkIn()">Check In</button>
+      .page-shell {
+        position: relative;
+        width: min(100%, 520px);
+      }
 
-  <p id="result"></p>
+      .event-grid {
+        position: absolute;
+        inset: -12% -18% -12% -18%;
+        background-image:
+          linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+        background-size: 26px 26px;
+        mask-image: radial-gradient(circle at center, black 35%, transparent 90%);
+        opacity: 0.28;
+        pointer-events: none;
+      }
+
+      .glow {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(80px);
+        opacity: 0.7;
+        pointer-events: none;
+      }
+
+      .glow-1 {
+        width: 220px;
+        height: 220px;
+        background: rgba(124, 156, 255, 0.32);
+        top: -40px;
+        left: -50px;
+      }
+
+      .glow-2 {
+        width: 220px;
+        height: 220px;
+        background: rgba(142, 240, 214, 0.2);
+        bottom: -30px;
+        right: -55px;
+      }
+
+      .checkin-card {
+        position: relative;
+        background: rgba(15, 23, 42, 0.72);
+        border: 1px solid var(--card-border);
+        border-radius: 24px;
+        padding: 28px 24px 22px;
+        box-shadow: 0 24px 60px var(--shadow);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        overflow: hidden;
+      }
+
+      .checkin-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, rgba(255,255,255,0.09), transparent 45%);
+        pointer-events: none;
+      }
+
+      .brand-row {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 18px;
+      }
+
+      .badge {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: rgba(124, 156, 255, 0.12);
+        border: 1px solid rgba(124, 156, 255, 0.35);
+        font-size: 0.74rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #dfe8ff;
+        font-weight: 700;
+      }
+
+      .event-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border-radius: 999px;
+        padding: 8px 10px;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+        color: #dfe8ff;
+        font-size: 0.72rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .event-chip .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--success);
+        box-shadow: 0 0 14px rgba(124, 240, 195, 0.8);
+      }
+
+      .badge-icon {
+        width: 22px;
+        height: 22px;
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+        color: #07111f;
+        font-weight: 900;
+        box-shadow: 0 8px 18px rgba(124, 156, 255, 0.5);
+      }
+
+      h1 {
+        position: relative;
+        margin: 0 0 10px;
+        font-size: clamp(2.2rem, 4vw, 3rem);
+        line-height: 1.05;
+        letter-spacing: -0.06em;
+      }
+
+      .subtitle {
+        position: relative;
+        margin: 0 0 24px;
+        color: var(--muted);
+        font-size: 0.98rem;
+      }
+
+      .info-strip {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        margin: 0 0 20px;
+      }
+
+      .mini-card {
+        padding: 12px 14px;
+        border-radius: 14px;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.06);
+      }
+
+      .mini-card .label {
+        display: block;
+        font-size: 0.68rem;
+        color: var(--muted);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        margin-bottom: 6px;
+      }
+
+      .mini-card .value {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--text);
+      }
+
+      .checkin-form {
+        position: relative;
+        display: grid;
+        gap: 14px;
+      }
+
+      .badge-preview {
+        position: relative;
+        display: grid;
+        gap: 10px;
+        margin: 12px 0 18px;
+        padding: 16px;
+        border-radius: 20px;
+        background: linear-gradient(135deg, rgba(124, 156, 255, 0.14), rgba(142, 240, 214, 0.08));
+        border: 1px solid rgba(255,255,255,0.08);
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03);
+      }
+
+      .preview-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .preview-brand {
+        font-size: 0.68rem;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+        color: #dfe8ff;
+      }
+
+      .preview-status {
+        font-size: 0.68rem;
+        padding: 6px 8px;
+        border-radius: 999px;
+        background: rgba(124, 240, 195, 0.12);
+        border: 1px solid rgba(124, 240, 195, 0.2);
+        color: #dffef2;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .preview-card {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 14px 14px 12px;
+        border-radius: 16px;
+        background: rgba(7, 17, 31, 0.5);
+        border: 1px solid rgba(255,255,255,0.06);
+      }
+
+      .preview-avatar {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(135deg, #a9d1ff, var(--accent-strong));
+        color: #07111f;
+        font-weight: 900;
+      }
+
+      .preview-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 0;
+        flex: 1;
+      }
+
+      .preview-meta strong {
+        font-size: 1rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .preview-meta span {
+        font-size: 0.72rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .preview-badge {
+        padding: 6px 8px;
+        border-radius: 10px;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.08);
+        color: #edf6ff;
+        font-size: 0.7rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      label {
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #d9e3f6;
+      }
+
+      .input-wrap {
+        display: flex;
+        align-items: center;
+        height: 58px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.04);
+        overflow: hidden;
+        transition: all 0.2s ease;
+      }
+
+      .input-wrap:focus-within {
+        border-color: rgba(124, 156, 255, 0.9);
+        box-shadow: 0 0 0 4px rgba(124, 156, 255, 0.16);
+      }
+
+      .input-icon {
+        display: grid;
+        place-items: center;
+        width: 52px;
+        height: 100%;
+        background: rgba(124, 156, 255, 0.08);
+        color: var(--accent-strong);
+        font-weight: 800;
+      }
+
+      input {
+        width: 100%;
+        height: 100%;
+        border: none;
+        background: transparent;
+        color: var(--text);
+        font-size: 1.02rem;
+        padding: 0 18px 0 8px;
+        outline: none;
+      }
+
+      input::placeholder {
+        color: rgba(167, 179, 201, 0.7);
+      }
+
+      button {
+        width: 100%;
+        border: none;
+        border-radius: 16px;
+        padding: 16px 18px;
+        font-size: 1rem;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        color: #07111f;
+        cursor: pointer;
+        background: linear-gradient(135deg, #a9d1ff 0%, var(--accent-strong) 48%, #f2c78d 100%);
+        box-shadow: 0 18px 28px rgba(124, 156, 255, 0.28);
+        transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+      }
+
+      button:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 22px 32px rgba(124, 156, 255, 0.38);
+      }
+
+      button:disabled {
+        opacity: 0.7;
+        cursor: wait;
+      }
+
+      .status-panel {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 22px;
+        padding: 14px 16px;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        color: var(--muted);
+        min-height: 58px;
+      }
+
+      .pulse-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--accent-strong);
+        box-shadow: 0 0 0 0 rgba(142, 240, 214, 0.6);
+        animation: pulse 1.8s infinite;
+        flex-shrink: 0;
+      }
+
+      .status-panel.success {
+        background: rgba(124, 240, 195, 0.08);
+        border-color: rgba(124, 240, 195, 0.28);
+        color: #dffef2;
+        animation: successGlow 0.8s ease-out;
+      }
+
+      .status-panel.success .pulse-dot {
+        background: var(--success);
+        box-shadow: 0 0 0 0 rgba(124, 240, 195, 0.6);
+      }
+
+      .success-badge {
+        display: none;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        padding: 16px 18px;
+        margin-top: 18px;
+        background: linear-gradient(135deg, rgba(124, 240, 195, 0.18), rgba(124, 156, 255, 0.1));
+        border: 1px solid rgba(124, 240, 195, 0.28);
+        border-radius: 18px;
+        color: #ebfff5;
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04), 0 18px 32px rgba(18, 34, 48, 0.34);
+      }
+
+      .success-badge.visible {
+        display: flex;
+        animation: cardSlide 0.5s ease-out;
+      }
+
+      .success-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(135deg, rgba(124, 240, 195, 0.92), rgba(142, 240, 214, 0.7));
+        color: #07111f;
+        font-size: 1.35rem;
+        font-weight: 900;
+        box-shadow: 0 12px 22px rgba(124, 240, 195, 0.22);
+      }
+
+      .success-copy {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .success-copy strong {
+        font-size: 1rem;
+        letter-spacing: 0.02em;
+      }
+
+      .success-copy span {
+        font-size: 0.8rem;
+        color: rgba(223, 254, 242, 0.78);
+      }
+
+      .status-panel.error {
+        background: rgba(255, 142, 166, 0.08);
+        border-color: rgba(255, 142, 166, 0.28);
+        color: #ffe1ea;
+      }
+
+      .status-panel.error .pulse-dot {
+        background: var(--error);
+        box-shadow: 0 0 0 0 rgba(255, 142, 166, 0.6);
+      }
+
+      .status-panel.loading {
+        color: #e9f0ff;
+      }
+
+      #result {
+        margin: 0;
+        font-size: 0.96rem;
+        line-height: 1.4;
+      }
+
+      @keyframes pulse {
+        0% {
+          box-shadow: 0 0 0 0 rgba(142, 240, 214, 0.65);
+        }
+        70% {
+          box-shadow: 0 0 0 10px rgba(142, 240, 214, 0);
+        }
+        100% {
+          box-shadow: 0 0 0 0 rgba(142, 240, 214, 0);
+        }
+      }
+
+      @keyframes successGlow {
+        0% { transform: scale(0.98); opacity: 0.75; }
+        100% { transform: scale(1); opacity: 1; }
+      }
+
+      @keyframes cardSlide {
+        0% { transform: translateY(8px); opacity: 0; }
+        100% { transform: translateY(0); opacity: 1; }
+      }
+
+      @media (max-width: 480px) {
+        .checkin-card {
+          padding: 24px 18px 18px;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="page-shell">
+      <div class="event-grid"></div>
+      <div class="glow glow-1"></div>
+      <div class="glow glow-2"></div>
+
+      <main class="checkin-card">
+        <div class="brand-row">
+          <div class="badge">
+            <span class="badge-icon">✦</span>
+            <span>Solar Pass</span>
+          </div>
+          <div class="event-chip"><span class="dot"></span> Live</div>
+        </div>
+
+        <div class="info-strip">
+          <div class="mini-card">
+            <span class="label">Event</span>
+            <span class="value">Solstice</span>
+          </div>
+          <div class="mini-card">
+            <span class="label">Entry</span>
+            <span class="value">Fast Track</span>
+          </div>
+        </div>
+
+        <h1>Welcome to Solstice</h1>
+        <p class="subtitle">Check in and print your badge in seconds.</p>
+
+        <div class="badge-preview" aria-live="polite">
+          <div class="preview-top">
+            <span class="preview-brand">Solstice Pass</span>
+            <span class="preview-status">Ready</span>
+          </div>
+          <div class="preview-card">
+            <div class="preview-avatar">S</div>
+            <div class="preview-meta">
+              <strong id="previewName">Guest Access</strong>
+              <span id="previewId">Attendee ID pending</span>
+            </div>
+            <div class="preview-badge">VIP</div>
+          </div>
+        </div>
+
+        <form id="checkinForm" class="checkin-form" onsubmit="event.preventDefault(); checkIn();">
+          <label for="attendeeId">Attendee ID</label>
+          <div class="input-wrap">
+            <span class="input-icon">#</span>
+            <input
+              id="attendeeId"
+              name="attendeeId"
+              type="text"
+              placeholder="Enter attendee ID"
+              autocomplete="off"
+            />
+          </div>
+
+          <button id="checkInButton" type="submit">Check In</button>
+        </form>
+
+        <div id="statusPanel" class="status-panel loading" aria-live="polite">
+          <span class="pulse-dot"></span>
+          <p id="result">Ready for your next check-in.</p>
+        </div>
+
+        <div id="successBadge" class="success-badge" aria-live="polite">
+          <div class="success-icon">✓</div>
+          <div class="success-copy">
+            <strong>Checked in</strong>
+            <span>Badge ready for pickup</span>
+          </div>
+        </div>
+      </main>
+    </div>
 
     <script>
-  async function checkIn() {
-    const attendeeId =
-      document.getElementById("attendeeId").value;
+      const statusPanel = document.getElementById("statusPanel");
+      const successBadge = document.getElementById("successBadge");
+      const result = document.getElementById("result");
+      const button = document.getElementById("checkInButton");
+      const attendeeInput = document.getElementById("attendeeId");
+      const previewName = document.getElementById("previewName");
+      const previewId = document.getElementById("previewId");
 
-    const button = document.getElementById("checkInButton");
-    const result = document.getElementById("result");
-
-    button.disabled = true;
-
-    try {
-      const response = await fetch("/check-in", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          attendeeId: attendeeId
-        })
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        result.textContent = data.message;
-        button.disabled = false;
-        return;
+      function updatePreview(attendeeId) {
+        previewName.textContent = attendeeId ? `Guest ${attendeeId}` : "Guest Access";
+        previewId.textContent = attendeeId ? `ID: ${attendeeId}` : "Attendee ID pending";
       }
 
-      // Job has been placed in the queue
-      result.textContent = "Printer job queued...";
+      function setStatus(message, type = "loading") {
+        result.textContent = message;
+        statusPanel.classList.remove("loading", "success", "error");
+        statusPanel.classList.add(type);
 
-      // Start checking the job status
-      checkJobStatus(data.jobId);
-
-    } catch (error) {
-      result.textContent = "Check-in failed.";
-      button.disabled = false;
-    }
-  }
-
-  async function checkJobStatus(jobId) {
-    const result = document.getElementById("result");
-
-    try {
-      const response = await fetch(
-        `/check-in/status/${jobId}`
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        result.textContent = "Could not get print status.";
-        document.getElementById("checkInButton").disabled = false;
-        return;
+        if (type === "success") {
+          successBadge.classList.add("visible");
+        } else {
+          successBadge.classList.remove("visible");
+        }
       }
 
-      const status = data.job.status;
+      async function checkIn() {
+        const attendeeId = attendeeInput.value.trim();
 
-      if (status === "queued") {
-        result.textContent = "Printer job queued...";
-        setTimeout(() => checkJobStatus(jobId), 1000);
+        if (!attendeeId) {
+          setStatus("Please enter an attendee ID.", "error");
+          attendeeInput.focus();
+          return;
+        }
 
-      } else if (status === "printing") {
-        result.textContent = "Printing badge...";
-        setTimeout(() => checkJobStatus(jobId), 1000);
+        updatePreview(attendeeId);
+        button.disabled = true;
+        attendeeInput.disabled = true;
+        setStatus("Checking in...", "loading");
 
-      } else if (status === "printed") {
-        result.textContent = "✅ Badge printed successfully. Checked in!";
-        document.getElementById("checkInButton").disabled = false;
+        try {
+          const response = await fetch("/check-in", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ attendeeId })
+          });
 
-      } else if (status === "failed") {
-        result.textContent = "❌ Badge printing failed.";
-        document.getElementById("checkInButton").disabled = false;
+          const data = await response.json();
 
-      } else {
-        result.textContent = `Print status: ${status}`;
-        setTimeout(() => checkJobStatus(jobId), 1000);
+          if (!response.ok) {
+            setStatus(data.message || "Check-in could not be completed.", "error");
+            button.disabled = false;
+            attendeeInput.disabled = false;
+            attendeeInput.focus();
+            return;
+          }
+
+          setStatus("Badge request queued...", "loading");
+          checkJobStatus(data.jobId);
+        } catch (error) {
+          setStatus("Check-in failed. Please try again.", "error");
+          button.disabled = false;
+          attendeeInput.disabled = false;
+          attendeeInput.focus();
+        }
       }
 
-    } catch (error) {
-      result.textContent = "Unable to check print status.";
-      document.getElementById("checkInButton").disabled = false;
-    }
-  }
-  </script>
+      async function checkJobStatus(jobId) {
+        try {
+          const response = await fetch(`/check-in/status/${jobId}`);
+          const data = await response.json();
 
-</body>
+          if (!response.ok) {
+            setStatus("Could not get print status.", "error");
+            button.disabled = false;
+            attendeeInput.disabled = false;
+            return;
+          }
+
+          const status = data.job.status;
+
+          if (status === "queued") {
+            setStatus("Printer job queued...", "loading");
+            setTimeout(() => checkJobStatus(jobId), 1000);
+          } else if (status === "printing") {
+            setStatus("Printing your badge...", "loading");
+            setTimeout(() => checkJobStatus(jobId), 1000);
+          } else if (status === "printed") {
+            setStatus("✅ Badge printed successfully. Checked in!", "success");
+            updatePreview(attendeeInput.value.trim() || "Guest");
+            button.disabled = false;
+            attendeeInput.disabled = false;
+            attendeeInput.value = "";
+            attendeeInput.focus();
+          } else if (status === "failed") {
+            setStatus("❌ Badge printing failed.", "error");
+            button.disabled = false;
+            attendeeInput.disabled = false;
+            attendeeInput.focus();
+          } else {
+            setStatus(`Print status: ${status}`, "loading");
+            setTimeout(() => checkJobStatus(jobId), 1000);
+          }
+        } catch (error) {
+          setStatus("Unable to check print status.", "error");
+          button.disabled = false;
+          attendeeInput.disabled = false;
+          attendeeInput.focus();
+        }
+      }
+    </script>
+  </body>
 </html>
+

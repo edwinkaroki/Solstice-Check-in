@@ -3,12 +3,14 @@
     {
       "id": "A001",
       "name": "John Kamau",
-      "checkedIn": false
+      "checkedIn": true,
+      "printPending": false
     },
     {
       "id": "A002",
       "name": "Mary Wanjiku",
-      "checkedIn": false
+      "checkedIn": false,
+      "printPending": true
     },
     {
       "id": "A003",
